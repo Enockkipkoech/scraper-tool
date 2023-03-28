@@ -1,21 +1,79 @@
 import puppeteer from "puppeteer";
+import fs from "fs";
 
 const main = async () => {
 	// Launch a headless browser
 
-	try {
-		const browser = await puppeteer.launch({
-			headless: false,
-		});
-		const page = await browser.newPage();
-		await page.goto(
-			"https://www.amazon.com/b?node=16225009011&pf_rd_r=S3F0SBHE3KJ0HGB248PT&pf_rd_p=5232c45b-5929-4ff0-8eae-5f67afd5c3dc&pd_rd_r=c8917604-69d7-4a93-aba6-9e597f6e92ac&pd_rd_w=zsyL9&pd_rd_wg=wu00B&ref_=pd_gw_unk",
-		);
+	const browser = await puppeteer.launch({
+		headless: false,
+		defaultViewport: false,
+		userDataDir: "./data",
+	});
+	const page = await browser.newPage();
+	await page.goto(
+		"https://www.amazon.com/s?i=computers-intl-ship&bbn=16225007011&rh=n%3A16225007011%2Cn%3A11036071%2Cp_36%3A1253503011&dc&fs=true&qid=1635596580&rnid=16225007011&ref=sr_pg_1",
+	);
 
-		await browser.close();
-	} catch (error) {
-		console.log(`Error Launching Scraper!`, error);
+	const products = await page.$$(
+		"div.s-main-slot.s-result-list.s-search-results.sg-row  > div.s-result-item",
+	);
+
+	console.log(products.length);
+
+	let jsonFile = [];
+	let productTitle = "Null";
+	let productPrice = "Null";
+	let productImg = "Null";
+	for (const product of products) {
+		try {
+			productTitle = await page.evaluate(
+				(el) => el.querySelector("h2 > a > span").textContent,
+				product,
+			);
+		} catch (error) {
+			// console.log(`Error Launching Scraper!`, error);
+		}
+
+		try {
+			productPrice = await page.evaluate(
+				(el) => el.querySelector(".a-price > .a-offscreen").textContent,
+				product,
+			);
+		} catch (error) {
+			// console.log(`Error Launching Scraper!`, error);
+		}
+
+		try {
+			productImg = await page.evaluate(
+				(el) => el.querySelector(".s-image").getAttribute("src"),
+				product,
+			);
+			// console.log("Img", productImg);
+		} catch (error) {
+			// console.log(`Error Launching Scraper!`, error);
+		}
+
+		if (
+			productTitle !== "Null" ||
+			productPrice !== "Null" ||
+			productImg !== "Null"
+		) {
+			jsonFile.push({ productTitle, productPrice, productImg });
+		}
+
+		// await browser.close();
 	}
+
+	// Write to Json File
+
+	fs.writeFile("data.json", JSON.stringify(jsonFile), (err) => {
+		if (err) {
+			console.log(`Error writing to Json File!`, err);
+		} else {
+			console.log("File written successfully\n");
+			console.log(jsonFile.length);
+		}
+	});
 };
 
 main();

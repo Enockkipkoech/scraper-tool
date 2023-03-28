@@ -1,6 +1,7 @@
 {
 	"type": "module",
 	"dependencies": {
+		"nodemon": "^2.0.22",
 		"puppeteer": "^19.8.0"
 	},
 	"name": "web-scraper",
