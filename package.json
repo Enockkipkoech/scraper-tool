@@ -9,6 +9,7 @@
 	"description": "Puppeteer Web scraping.",
 	"main": "index.js",
 	"scripts": {
+		"test": "node class.js",
 		"start-dev": "node index.js"
 	},
 	"keywords": [
